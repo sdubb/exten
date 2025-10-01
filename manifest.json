@@ -249,7 +249,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["popup-styles.css", "icons/*"],
+      "resources": ["popup-styles.css", "icons/*", "utils/message-handler.js"],
       "matches": ["<all_urls>"]
     }
   ],

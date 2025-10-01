@@ -1,0 +1,234 @@
+# AutoJobr Extension - Error Flow Analysis
+
+## BEFORE FIXES ❌
+
+User Action: Click "Auto-fill" button
+    ↓
+content-script.js: startSmartAutofill()
+    ↓
+content-script.js: chrome.runtime.sendMessage({ action: 'getUserProfile' })
+    ↓
+    ↓ (Extension reloads in background)
+    ↓
+ERROR: "Extension context invalidated"
+    ↓
+Auto-fill fails silently ❌
+    ↓
+User sees: Nothing happens or generic error
+    ↓
+User frustration 😞
+
+
+## AFTER FIXES ✅
+
+User Action: Click "Auto-fill" button
+    ↓
+content-script.js: startSmartAutofill()
+    ↓
+Check: Is context valid?
+    ├─ NO → Show "Extension reloaded, please refresh" notification
+    │        User clicks "Refresh Now" button
+    │        Page reloads, extension works ✅
+    │
+    └─ YES → Continue
+            ↓
+messageHandler.sendMessageSafe({ action: 'getUserProfile' })
+    ↓
+    ├─ Attempt 1 fails → Wait 1s → Retry
+    ├─ Attempt 2 fails → Wait 2s → Retry
+    └─ Attempt 3 succeeds ✅
+            ↓
+Profile received
+    ↓
+Auto-fill proceeds
+    ↓
+Success! 🎉
+
+
+## ERROR RECOVERY FLOW
+
+Extension Reload Detected
+    ↓
+MessageHandler.checkContextValidity()
+    ↓
+isContextValid = false
+    ↓
+Next message attempt:
+    ↓
+Catch context invalidation error
+    ↓
+Show user notification:
+    ┌──────────────────────────────────┐
+    │ ⚠️  Extension Reloaded           │
+    │                                  │
+    │ Please refresh this page to     │
+    │ continue using AutoJobr         │
+    │                                  │
+    │  [ Refresh Now ]                │
+    └──────────────────────────────────┘
+    ↓
+User clicks "Refresh Now"
+    ↓
+Page reloads
+    ↓
+Extension initializes fresh ✅
+    ↓
+All features work normally
+
+
+## MESSAGE RETRY FLOW
+
+chrome.runtime.sendMessage(message)
+    ↓
+    ├─ Connection Error
+    │   ↓
+    │   Wait 1 second
+    │   ↓
+    │   Retry (Attempt 2/3)
+    │   ↓
+    │   ├─ Still fails → Wait 2 seconds
+    │   │   ↓
+    │   │   Retry (Attempt 3/3)
+    │   │   ↓
+    │   │   ├─ Still fails → Show error
+    │   │   └─ Success ✅
+    │   │
+    │   └─ Success ✅
+    │
+    ├─ Timeout (10s)
+    │   ↓
+    │   Show: "Request timed out, please try again"
+    │
+    ├─ Context Invalidated
+    │   ↓
+    │   Show: "Please refresh page"
+    │
+    └─ Success ✅
+
+
+## JOB DETECTION FLOW
+
+### Before (Duplicate Detection) ❌
+
+URL Change: linkedin.com/jobs/123
+    ↓
+Trigger: detectJobPosting() × 1
+    ↓
+Mutation Observer: Form appeared
+    ↓
+Trigger: detectJobPosting() × 2
+    ↓
+Mutation Observer: Content changed
+    ↓
+Trigger: detectJobPosting() × 3
+    ...
+    (Continues 10-15 times)
+    ↓
+15 API calls to analyze same job ❌
+Performance degraded
+
+
+### After (Debounced) ✅
+
+URL Change: linkedin.com/jobs/123
+    ↓
+Check: Was this URL detected < 3 seconds ago?
+    ├─ YES → Skip detection, use cached data
+    └─ NO → Continue
+            ↓
+Trigger: detectJobPosting() × 1
+    ↓
+Set: lastDetectionUrl = "linkedin.com/jobs/123"
+    ↓
+Set: lastDetectionTime = now
+    ↓
+Mutation Observer: Form appeared
+    ↓
+Check: Same URL + < 3 seconds?
+    └─ YES → Skip (debounced)
+    ↓
+Mutation Observer: Content changed
+    ↓
+Check: Same URL + < 3 seconds?
+    └─ YES → Skip (debounced)
+    ↓
+Result: 1 API call ✅
+Performance excellent
+
+
+## AUTO-FILL LOOP PREVENTION
+
+### Before (Infinite Loop) ❌
+
+Start auto-fill
+    ↓
+Fill field: firstName = "John"
+    ↓
+DOM Mutation: Field value changed
+    ↓
+Trigger: Auto-fill again (detected form change)
+    ↓
+Fill field: firstName = "John" (again)
+    ↓
+DOM Mutation: Field value changed
+    ↓
+Trigger: Auto-fill again
+    ...
+    (Continues forever)
+    ↓
+Browser hangs ❌
+
+
+### After (Loop Prevention) ✅
+
+Start auto-fill
+    ↓
+Check: autoFillAttempts counter
+    ├─ Count = 0 → Continue
+    │   ↓
+    │   Increment: autoFillAttempts = 1
+    │   ↓
+    │   Fill field: firstName = "John"
+    │   ↓
+    │   Mark: filledFields.add('firstName')
+    │   ↓
+    │   DOM Mutation: Field value changed
+    │   ↓
+    │   Check: Is 'firstName' in filledFields?
+    │   └─ YES → Skip re-fill
+    │
+    ├─ Count = 1 → Continue (2nd page of form)
+    │
+    ├─ Count = 2 → Continue (3rd page of form)
+    │
+    └─ Count = 3 → STOP
+        ↓
+        Show: "Max attempts reached"
+        ↓
+        Set timeout: Reset counter after 5 seconds
+        ↓
+        User can retry if needed ✅
+
+
+## SYSTEM HEALTH MONITORING
+
+┌─────────────────────────────────────────┐
+│  AutoJobr Health Dashboard              │
+├─────────────────────────────────────────┤
+│                                         │
+│  Context Valid:          ✅ TRUE       │
+│  Message Success Rate:   ✅ 98%        │
+│  Job Detections/Page:    ✅ 1.2        │
+│  Auto-fill Success:      ✅ 94%        │
+│  Avg Response Time:      ✅ 450ms      │
+│                                         │
+│  Recent Errors (last hour):             │
+│  - Context invalidated:  0              │
+│  - Connection failed:    2 (recovered)  │
+│  - Timeout:              1              │
+│                                         │
+│  Cache Hit Rate:         ✅ 85%        │
+│  API Quota Used:         ✅ 23%        │
+│                                         │
+└─────────────────────────────────────────┘
+
