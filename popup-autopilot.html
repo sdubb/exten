@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoJobr Autopilot</title>
+  <link rel="stylesheet" href="popup-styles.css">
+  <style>
+    /* Autopilot specific styles */
+    .autopilot-section {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 12px 0;
+      color: white;
+    }
+
+    .autopilot-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .autopilot-title {
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .autopilot-toggle {
+      position: relative;
+      width: 52px;
+      height: 28px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .autopilot-toggle.active {
+      background: #22c55e;
+    }
+
+    .autopilot-toggle::after {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: white;
+      top: 2px;
+      left: 2px;
+      transition: all 0.3s;
+    }
+
+    .autopilot-toggle.active::after {
+      left: 26px;
+    }
+
+    .autopilot-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .autopilot-stat {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .autopilot-stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      display: block;
+    }
+
+    .autopilot-stat-label {
+      font-size: 10px;
+      opacity: 0.9;
+      margin-top: 2px;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin: 12px 0;
+    }
+
+    .feature-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .feature-card:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .feature-icon {
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+
+    .feature-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .feature-desc {
+      font-size: 11px;
+      opacity: 0.8;
+      line-height: 1.3;
+    }
+
+    .premium-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #ffd700, #ffed4e);
+      color: #000;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 4px;
+    }
+
+    .settings-btn {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      margin-top: 12px;
+      width: 100%;
+      transition: all 0.2s;
+    }
+
+    .settings-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .quick-action-btn {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      border: none;
+      color: white;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .quick-action-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .progress-ring {
+      width: 60px;
+      height: 60px;
+      margin: 0 auto;
+    }
+
+    .progress-ring-circle {
+      transition: stroke-dashoffset 0.35s;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+    }
+  </style>
+</head>
+<body style="width: 380px; background: linear-gradient(135deg, #1e293b 0%, #334155 100%);">
+
+  <!-- Autopilot Section -->
+  <div class="autopilot-section">
+    <div class="autopilot-header">
+      <div class="autopilot-title">
+        <span>🤖</span>
+        <span>Autopilot Mode</span>
+      </div>
+      <div class="autopilot-toggle" id="autopilotToggle"></div>
+    </div>
+
+    <div class="autopilot-stats">
+      <div class="autopilot-stat">
+        <span class="autopilot-stat-value" id="appliedToday">0</span>
+        <span class="autopilot-stat-label">Applied Today</span>
+      </div>
+      <div class="autopilot-stat">
+        <span class="autopilot-stat-value" id="queueLength">0</span>
+        <span class="autopilot-stat-label">In Queue</span>
+      </div>
+      <div class="autopilot-stat">
+        <span class="autopilot-stat-value" id="dailyLimit">50</span>
+        <span class="autopilot-stat-label">Daily Limit</span>
+      </div>
+    </div>
+
+    <button class="settings-btn" id="autopilotSettings">⚙️ Configure Autopilot</button>
+  </div>
+
+  <!-- Advanced Features Grid -->
+  <div style="padding: 16px;">
+    <h3 style="color: #e5e7eb; font-size: 14px; margin-bottom: 12px; font-weight: 600;">Advanced Features</h3>
+
+    <div class="feature-grid">
+      <div class="feature-card" id="resumeOptimizerCard">
+        <div class="feature-icon">📄</div>
+        <div class="feature-title">Resume Optimizer</div>
+        <div class="feature-desc">ATS keyword matching & multi-version management</div>
+      </div>
+
+      <div class="feature-card" id="referralFinderCard">
+        <div class="feature-icon">🤝</div>
+        <div class="feature-title">Referral Finder</div>
+        <div class="feature-desc">Find & message employees at target companies</div>
+      </div>
+
+      <div class="feature-card" id="bulkApplyCard">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-title">Bulk Apply</div>
+        <div class="feature-desc">Apply to multiple jobs with one click</div>
+      </div>
+
+      <div class="feature-card" id="interviewPrepCard">
+        <div class="feature-icon">💼</div>
+        <div class="feature-title">Interview Prep<span class="premium-badge">PRO</span></div>
+        <div class="feature-desc">Company research & question prediction</div>
+      </div>
+
+      <div class="feature-card" id="analyticsCard">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">Analytics Dashboard</div>
+        <div class="feature-desc">Track success rate & optimize strategy</div>
+      </div>
+
+      <div class="feature-card" id="followUpCard">
+        <div class="feature-icon">📧</div>
+        <div class="feature-title">Smart Follow-ups</div>
+        <div class="feature-desc">Automated reminders & templates</div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <h3 style="color: #e5e7eb; font-size: 14px; margin: 16px 0 12px; font-weight: 600;">Quick Actions</h3>
+
+    <div class="quick-actions">
+      <button class="quick-action-btn" id="autofillBtn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        ✏️ Auto-fill Form
+      </button>
+      <button class="quick-action-btn" id="analyzeBtn" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+        🎯 Analyze Match
+      </button>
+      <button class="quick-action-btn" id="saveJobBtn" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+        💾 Save Job
+      </button>
+      <button class="quick-action-btn" id="coverLetterBtn" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+        📝 Generate Cover Letter
+      </button>
+    </div>
+
+    <!-- Connection Status -->
+    <div style="margin-top: 16px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div id="statusDot" style="width: 8px; height: 8px; border-radius: 50%; background: #22c55e;"></div>
+        <span id="connectionStatus" style="font-size: 12px; color: #e5e7eb;">Connected</span>
+      </div>
+      <button id="openDashboard" style="background: none; border: 1px solid rgba(255,255,255,0.2); color: #e5e7eb; padding: 6px 12px; border-radius: 6px; font-size: 11px; cursor: pointer;">
+        Open Dashboard →
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loading" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+    <div style="text-align: center; color: white;">
+      <div style="width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px;"></div>
+      <div>Loading...</div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+  <script>
+    // Autopilot specific functionality
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Load autopilot status
+      const response = await chrome.runtime.sendMessage({ action: 'getAutopilotStatus' });
+
+      if (response && response.success) {
+        const status = response.status;
+
+        // Update UI
+        document.getElementById('appliedToday').textContent = status.appliedToday;
+        document.getElementById('queueLength').textContent = status.queueLength;
+        document.getElementById('dailyLimit').textContent = status.dailyLimit;
+
+        const toggle = document.getElementById('autopilotToggle');
+        if (status.isActive) {
+          toggle.classList.add('active');
+        }
+      }
+
+      // Autopilot toggle
+      document.getElementById('autopilotToggle').addEventListener('click', async function() {
+        const isActive = this.classList.contains('active');
+        this.classList.toggle('active');
+
+        await chrome.runtime.sendMessage({
+          action: 'toggleAutopilot',
+          enabled: !isActive
+        });
+      });
+
+      // Feature cards
+      document.getElementById('resumeOptimizerCard').addEventListener('click', () => {
+        chrome.tabs.create({ url: 'https://autojobr.com/resume-optimizer' });
+      });
+
+      document.getElementById('referralFinderCard').addEventListener('click', () => {
+        chrome.tabs.create({ url: 'https://autojobr.com/referrals' });
+      });
+
+      document.getElementById('bulkApplyCard').addEventListener('click', () => {
+        chrome.tabs.create({ url: 'https://autojobr.com/bulk-apply' });
+      });
+
+      document.getElementById('analyticsCard').addEventListener('click', () => {
+        chrome.tabs.create({ url: 'https://autojobr.com/analytics' });
+      });
+
+      document.getElementById('autopilotSettings').addEventListener('click', () => {
+        chrome.tabs.create({ url: 'https://autojobr.com/autopilot/settings' });
+      });
+    });
+  </script>
+
+  <style>
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</body>
+</html>

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "AutoJobr",
-  "version": "2.1.0",
-  "description": "AI-powered job application assistant - Smart auto-fill, job matching, and application tracking across 100+ job boards",
+  "name": "AutoJobr Autopilot",
+  "version": "3.0.0",
+  "description": "AI-powered autopilot job search - Searchless job finding, bulk auto-apply, ATS resume optimizer, and referral finder across 100+ job boards",
   "permissions": [
     "storage",
     "activeTab",
@@ -10,7 +10,9 @@
     "notifications",
     "webNavigation",
     "tabs",
-    "contextMenus"
+    "contextMenus",
+    "alarms",
+    "identity"
   ],
   "host_permissions": [
     "*://*.autojobr.com/*",
@@ -249,7 +251,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["popup-styles.css", "icons/*", "utils/message-handler.js"],
+      "resources": ["popup-styles.css", "icons/*", "utils/message-handler.js", "autopilot-engine.js", "resume-optimizer.js", "referral-finder.js"],
       "matches": ["<all_urls>"]
     }
   ],
@@ -271,6 +273,12 @@
         "default": "Ctrl+Shift+S"
       },
       "description": "Save current job"
+    },
+    "toggle-autopilot": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+P"
+      },
+      "description": "Toggle autopilot mode"
     }
   }
 }

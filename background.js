@@ -1,19 +1,31 @@
-// Enhanced AutoJobr Background Service Worker
-console.log('🚀 AutoJobr background service worker v2.0 loading...');
+// Enhanced AutoJobr Autopilot Background Service Worker
+console.log('🚀 AutoJobr Autopilot v3.0 loading...');
+
+// Import helper modules
+importScripts('autopilot-engine.js', 'resume-optimizer.js', 'referral-finder.js');
 
 class AutoJobrBackground {
   constructor() {
     this.apiUrl = 'https://autojobr.com';
     this.cache = new Map();
     this.rateLimiter = new Map();
+    this.autopilot = null;
+    this.resumeOptimizer = null;
+    this.referralFinder = null;
     this.init();
   }
 
-  init() {
+  async init() {
     this.setupEventListeners();
-    this.detectApiUrl();
+    await this.detectApiUrl();
     this.setupPeriodicTasks();
-    console.log('🚀 AutoJobr background service worker v2.0 initialized');
+
+    // Initialize new modules
+    this.autopilot = new AutopilotEngine();
+    this.resumeOptimizer = new ResumeOptimizer();
+    this.referralFinder = new ReferralFinder();
+
+    console.log('🚀 AutoJobr Autopilot v3.0 initialized with advanced features');
   }
 
   async detectApiUrl() {
@@ -333,6 +345,106 @@ class AutoJobrBackground {
         case 'openPopup':
           await this.openExtensionPopup();
           sendResponse({ success: true });
+          break;
+
+        // Autopilot features
+        case 'toggleAutopilot':
+          if (this.autopilot) {
+            await this.autopilot.toggleAutopilot(message.enabled);
+            sendResponse({ success: true, status: this.autopilot.getStatus() });
+          }
+          break;
+
+        case 'getAutopilotStatus':
+          if (this.autopilot) {
+            sendResponse({ success: true, status: this.autopilot.getStatus() });
+          }
+          break;
+
+        case 'updateAutopilotPreferences':
+          if (this.autopilot) {
+            await this.autopilot.updatePreferences(message.preferences);
+            sendResponse({ success: true });
+          }
+          break;
+
+        // Resume optimizer features
+        case 'optimizeResume':
+          if (this.resumeOptimizer) {
+            const optimization = await this.resumeOptimizer.optimizeResume(
+              message.resume,
+              message.jobDescription
+            );
+            sendResponse({ success: true, optimization });
+          }
+          break;
+
+        case 'analyzeJobDescription':
+          if (this.resumeOptimizer) {
+            const analysis = await this.resumeOptimizer.analyzeJobDescription(
+              message.jobDescription
+            );
+            sendResponse({ success: true, analysis });
+          }
+          break;
+
+        case 'createResumeVersion':
+          if (this.resumeOptimizer) {
+            const version = await this.resumeOptimizer.createOptimizedVersion(
+              message.resume,
+              message.jobTitle,
+              message.company,
+              message.optimizations
+            );
+            sendResponse({ success: true, version });
+          }
+          break;
+
+        case 'getResumeVersions':
+          if (this.resumeOptimizer) {
+            const versions = await this.resumeOptimizer.getVersions();
+            sendResponse({ success: true, versions });
+          }
+          break;
+
+        // Referral finder features
+        case 'findReferrals':
+          if (this.referralFinder) {
+            const referrals = await this.referralFinder.findReferrals(
+              message.jobData,
+              message.userProfile
+            );
+            sendResponse({ success: true, ...referrals });
+          }
+          break;
+
+        case 'generateReferralMessage':
+          if (this.referralFinder) {
+            const msg = this.referralFinder.generateMessage(
+              message.referral,
+              message.jobData,
+              message.userProfile
+            );
+            sendResponse({ success: true, message: msg });
+          }
+          break;
+
+        case 'sendReferralRequest':
+          if (this.referralFinder) {
+            const result = await this.referralFinder.sendReferralRequest(
+              message.referral,
+              message.message,
+              message.jobData
+            );
+            sendResponse(result);
+          }
+          break;
+
+        case 'getReferralAnalytics':
+          if (this.referralFinder) {
+            const analytics = await this.referralFinder.getReferralAnalytics();
+            sendResponse({ success: true, analytics });
+          }
           break;
 
         default:
