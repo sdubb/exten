@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Extension Close Functionality</title>
+    <link rel="stylesheet" href="popup-styles.css">
+    <style>
+        body {
+            margin: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+        .test-button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #1d4ed8;
+        }
+    </style>
+</head>
+<body>
+    <h1>AutoJobr Extension - Close Button Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: On-Page Widget Close Button</h2>
+        <p>This tests the close functionality for the widget that appears on job pages.</p>
+        <button class="test-button" onclick="showWidget()">Show Widget</button>
+        <button class="test-button" onclick="hideWidget()">Hide Widget (Programmatic)</button>
+        
+        <!-- Widget Container -->
+        <div id="test-widget-container"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Popup Close Button</h2>
+        <p>This tests the close functionality for the extension popup.</p>
+        <button class="test-button" onclick="testPopupClose()">Test Popup Close</button>
+        <div id="popup-test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Debug Information</h2>
+        <div id="debug-info">
+            <p><strong>User Agent:</strong> <span id="user-agent"></span></p>
+            <p><strong>Close Button Tests:</strong></p>
+            <ul id="test-results"></ul>
+        </div>
+    </div>
+
+    <script>
+        // Initialize debug info
+        document.getElementById('user-agent').textContent = navigator.userAgent;
+        
+        function showWidget() {
+            const container = document.getElementById('test-widget-container');
+            container.innerHTML = `
+                <div class="autojobr-widget" style="position: relative; margin: 20px 0; max-width: 360px;">
+                    <div class="autojobr-header">
+                        <div class="autojobr-logo">
+                            <div class="autojobr-icon">A</div>
+                            <span>AutoJobr Test Widget</span>
+                        </div>
+                        <div class="autojobr-controls">
+                            <button class="autojobr-minimize" title="Minimize" onclick="testMinimize()">−</button>
+                            <button class="autojobr-close" title="Close" onclick="testClose()">×</button>
+                        </div>
+                    </div>
+                    <div class="autojobr-content">
+                        <div class="autojobr-status">
+                            <div class="status-icon">🎯</div>
+                            <div class="status-text">Test widget loaded successfully!</div>
+                        </div>
+                        <div class="autojobr-actions">
+                            <button class="autojobr-btn primary">
+                                <span class="btn-icon">⚡</span>
+                                <span class="btn-text">Test Button</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            logTest('Widget created successfully');
+            
+            // Test event listeners
+            const closeBtn = container.querySelector('.autojobr-close');
+            const minimizeBtn = container.querySelector('.autojobr-minimize');
+            
+            if (closeBtn) {
+                logTest('Close button found: ✓');
+                
+                // Test multiple event types
+                closeBtn.addEventListener('click', function(e) {
+                    logTest('Close button click event triggered: ✓');
+                    testCloseAnimation();
+                });
+                
+                closeBtn.addEventListener('touchend', function(e) {
+                    logTest('Close button touch event triggered: ✓');
+                });
+            } else {
+                logTest('Close button NOT found: ✗');
+            }
+            
+            if (minimizeBtn) {
+                logTest('Minimize button found: ✓');
+            } else {
+                logTest('Minimize button NOT found: ✗');
+            }
+        }
+
+        function testClose() {
+            logTest('testClose() function called');
+            testCloseAnimation();
+        }
+
+        function testMinimize() {
+            logTest('testMinimize() function called');
+            const content = document.querySelector('.autojobr-content');
+            const widget = document.querySelector('.autojobr-widget');
+            
+            if (content && widget) {
+                const isMinimized = content.style.display === 'none';
+                
+                if (isMinimized) {
+                    content.style.display = 'block';
+                    widget.style.height = 'auto';
+                    logTest('Widget expanded');
+                } else {
+                    content.style.display = 'none';
+                    widget.style.height = '60px';
+                    logTest('Widget minimized');
+                }
+            }
+        }
+
+        function testCloseAnimation() {
+            const widget = document.querySelector('.autojobr-widget');
+            if (widget) {
+                logTest('Starting close animation...');
+                widget.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                widget.style.opacity = '0';
+                widget.style.transform = 'translateX(100%)';
+                
+                setTimeout(() => {
+                    widget.remove();
+                    logTest('Widget removed from DOM: ✓');
+                }, 300);
+            } else {
+                logTest('Widget not found for close animation: ✗');
+            }
+        }
+
+        function hideWidget() {
+            const widget = document.querySelector('.autojobr-widget');
+            if (widget) {
+                widget.remove();
+                logTest('Widget removed programmatically: ✓');
+            } else {
+                logTest('No widget to remove: ✗');
+            }
+        }
+
+        function testPopupClose() {
+            // Test if we can simulate popup close functionality
+            try {
+                logTest('Testing popup close functionality...');
+                
+                // Check if window.close() is available
+                if (typeof window.close === 'function') {
+                    logTest('window.close() function available: ✓');
+                    document.getElementById('popup-test-result').innerHTML = 
+                        '<p style="color: green;">✓ window.close() function is available and should work in popup context</p>';
+                } else {
+                    logTest('window.close() function NOT available: ✗');
+                    document.getElementById('popup-test-result').innerHTML = 
+                        '<p style="color: red;">✗ window.close() function is not available</p>';
+                }
+
+                // Test ESC key functionality
+                const escEvent = new KeyboardEvent('keydown', { key: 'Escape' });
+                document.dispatchEvent(escEvent);
+                logTest('ESC key event dispatched: ✓');
+                
+            } catch (error) {
+                logTest('Error testing popup close: ' + error.message);
+                document.getElementById('popup-test-result').innerHTML = 
+                    '<p style="color: red;">✗ Error testing popup functionality: ' + error.message + '</p>';
+            }
+        }
+
+        function logTest(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const listItem = document.createElement('li');
+            listItem.textContent = `[${timestamp}] ${message}`;
+            document.getElementById('test-results').appendChild(listItem);
+            console.log(`[AutoJobr Test] ${message}`);
+        }
+
+        // Auto-run basic tests on page load
+        window.addEventListener('load', function() {
+            logTest('Test page loaded');
+            logTest('Testing CSS loading...');
+            
+            // Check if CSS classes are loaded
+            const testDiv = document.createElement('div');
+            testDiv.className = 'autojobr-widget';
+            document.body.appendChild(testDiv);
+            const styles = window.getComputedStyle(testDiv);
+            
+            if (styles.position !== 'static') {
+                logTest('CSS styles loaded correctly: ✓');
+            } else {
+                logTest('CSS styles NOT loaded: ✗');
+            }
+            
+            document.body.removeChild(testDiv);
+        });
+    </script>
+</body>
+</html>

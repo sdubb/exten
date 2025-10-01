@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoJobr - Smart Job Assistant</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 380px;
+      min-height: 500px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      overflow: hidden;
+    }
+
+    .container {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(20px);
+      padding: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .header-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .close-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      line-height: 1;
+    }
+
+    .close-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
+    }
+
+    .close-btn:active {
+      transform: scale(0.95);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: white;
+      font-weight: 700;
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #00d4ff, #0ea5e9);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+      font-size: 16px;
+      box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+    }
+
+    .connection-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4ade80;
+      animation: pulse 2s infinite;
+      box-shadow: 0 0 8px rgba(74, 222, 128, 0.5);
+    }
+
+    .status-dot.disconnected {
+      background: #ef4444;
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.1); }
+    }
+
+    .content {
+      flex: 1;
+      background: white;
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    .page-info {
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      border: 1px solid #f59e0b;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page-info::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #f59e0b, #d97706);
+    }
+
+    .page-info.supported {
+      background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+      border-color: #22c55e;
+    }
+
+    .page-info.supported::before {
+      background: linear-gradient(90deg, #22c55e, #16a34a);
+    }
+
+    .page-info.unsupported {
+      background: linear-gradient(135deg, #fee2e2, #fecaca);
+      border-color: #ef4444;
+    }
+
+    .page-info.unsupported::before {
+      background: linear-gradient(90deg, #ef4444, #dc2626);
+    }
+
+    .page-info-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .page-info-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    .action-section {
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .action-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      background: white;
+      color: #374151;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .action-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      transition: left 0.5s;
+    }
+
+    .action-btn:hover::before {
+      left: 100%;
+    }
+
+    .action-btn:hover {
+      border-color: #3b82f6;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+    }
+
+    .action-btn.primary {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      color: white;
+      border-color: #3b82f6;
+    }
+
+    .action-btn.primary:hover {
+      background: linear-gradient(135deg, #1d4ed8, #1e40af);
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+    }
+
+    .action-btn.success {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: white;
+      border-color: #22c55e;
+    }
+
+    .action-btn.success:hover {
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
+    }
+
+    .action-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .action-btn:disabled:hover {
+      border-color: #e5e7eb;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-icon {
+      width: 24px;
+      height: 24px;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+    }
+
+    .primary .btn-icon, .success .btn-icon {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .score-section {
+      background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .score-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #22c55e, #3b82f6, #8b5cf6);
+    }
+
+    .score-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .score-title {
+      font-size: 14px;
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    .score-value {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .score-progress {
+      width: 100%;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .score-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #22c55e, #16a34a);
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .score-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .quick-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .quick-btn {
+      flex: 1;
+      padding: 12px 8px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: white;
+      color: #6b7280;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .quick-btn:hover {
+      background: #f9fafb;
+      border-color: #d1d5db;
+      color: #374151;
+    }
+
+    .settings-section {
+      border-top: 2px solid #f1f5f9;
+      padding-top: 20px;
+    }
+
+    .setting-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      font-size: 14px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .setting-item:last-child {
+      border-bottom: none;
+    }
+
+    .setting-label {
+      color: #374151;
+      font-weight: 500;
+    }
+
+    .toggle {
+      width: 44px;
+      height: 24px;
+      background: #cbd5e1;
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .toggle.active {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+    }
+
+    .toggle-handle {
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .toggle.active .toggle-handle {
+      transform: translateX(20px);
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 40px 20px;
+      color: #64748b;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid #e2e8f0;
+      border-top: 3px solid #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .footer {
+      text-align: center;
+      padding: 16px 20px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    .footer a {
+      color: #00d4ff;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .footer a:hover {
+      color: #0ea5e9;
+    }
+
+    .login-btn {
+      background: none;
+      border: none;
+      color: #00d4ff;
+      text-decoration: underline;
+      cursor: pointer;
+      font-size: inherit;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .login-btn:hover {
+      color: #0ea5e9;
+    }
+
+    .job-info {
+      background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+      border: 1px solid #0ea5e9;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+
+    .job-title {
+      font-weight: 600;
+      color: #0c4a6e;
+      margin-bottom: 4px;
+    }
+
+    .job-company {
+      color: #0369a1;
+      font-size: 12px;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #22c55e;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
+      z-index: 10001;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    .notification.error {
+      background: #ef4444;
+      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+    }
+
+    /* Tasks Section Styling */
+    .tasks-section {
+      margin-bottom: 20px;
+      border-top: 2px solid #f1f5f9;
+      padding-top: 16px;
+    }
+
+    .tasks-count {
+      display: inline-block;
+      background: #3b82f6;
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 12px;
+      margin-left: 8px;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .tasks-list {
+      max-height: 150px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      background: #f8fafc;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    .task-item:hover {
+      background: #e2e8f0;
+    }
+
+    .task-item.completed {
+      opacity: 0.7;
+      text-decoration: line-through;
+    }
+
+    .task-checkbox {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #d1d5db;
+      border-radius: 3px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    .task-checkbox.checked {
+      background: #22c55e;
+      border-color: #22c55e;
+      color: white;
+    }
+
+    .task-text {
+      flex: 1;
+      color: #374151;
+      font-weight: 500;
+    }
+
+    .task-priority {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .task-priority.high {
+      background: #ef4444;
+    }
+
+    .task-priority.medium {
+      background: #f59e0b;
+    }
+
+    .task-priority.low {
+      background: #22c55e;
+    }
+
+    .add-task-btn {
+      width: 100%;
+      padding: 8px;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px dashed #3b82f6;
+      border-radius: 6px;
+      color: #3b82f6;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .add-task-btn:hover {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: #1d4ed8;
+    }
+
+    .no-tasks {
+      text-align: center;
+      color: #9ca3af;
+      font-size: 12px;
+      padding: 16px;
+    }
+
+    /* Scrollbar styling */
+    .content::-webkit-scrollbar, .tasks-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .content::-webkit-scrollbar-track, .tasks-list::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+
+    .content::-webkit-scrollbar-thumb, .tasks-list::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+
+    .content::-webkit-scrollbar-thumb:hover, .tasks-list::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Task Creation Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .task-modal {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      width: 340px;
+      max-width: 90vw;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: scale(0.9);
+      transition: transform 0.2s ease-out;
+    }
+
+    .modal-overlay.show .task-modal {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: #9ca3af;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 8px 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    .priority-options {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .priority-btn {
+      flex: 1;
+      padding: 8px 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 6px;
+      background: white;
+      color: #6b7280;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .priority-btn.selected {
+      border-color: #3b82f6;
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+
+    .priority-btn.high.selected {
+      border-color: #ef4444;
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
+    .priority-btn.medium.selected {
+      border-color: #f59e0b;
+      background: #fffbeb;
+      color: #d97706;
+    }
+
+    .priority-btn.low.selected {
+      border-color: #22c55e;
+      background: #f0fdf4;
+      color: #16a34a;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .modal-btn.cancel {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+
+    .modal-btn.cancel:hover {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .modal-btn.primary {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      color: white;
+    }
+
+    .modal-btn.primary:hover {
+      background: linear-gradient(135deg, #1d4ed8, #1e40af);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .modal-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .form-error {
+      color: #ef4444;
+      font-size: 12px;
+      margin-top: 4px;
+      display: none;
+    }
+
+    /* Template Options */
+    .template-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 6px;
+      margin-bottom: 16px;
+    }
+
+    .template-btn {
+      padding: 10px 8px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      background: white;
+      color: #6b7280;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .template-btn:hover {
+      border-color: #3b82f6;
+      background: #f8fafc;
+      color: #1d4ed8;
+      transform: translateY(-1px);
+    }
+
+    .template-btn.selected {
+      border-color: #3b82f6;
+      background: #eff6ff;
+      color: #1d4ed8;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+    }
+
+    .template-btn.custom.selected {
+      border-color: #8b5cf6;
+      background: #f3f4f6;
+      color: #7c3aed;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">
+        <div class="logo-icon">A</div>
+        AutoJobr
+      </div>
+      <div class="header-controls">
+        <div class="connection-status">
+          <div class="status-dot" id="statusDot"></div>
+          <span id="connectionStatus">Connecting...</span>
+        </div>
+        <button class="close-btn" id="closePopup" title="Close">×</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="page-info" id="pageInfo">
+        <div id="pageStatus">Analyzing current page...</div>
+      </div>
+
+      <div class="job-info" id="jobInfo" style="display: none;">
+        <div class="job-title" id="jobTitle"></div>
+        <div class="job-company" id="jobCompany"></div>
+      </div>
+
+      <div class="action-section">
+        <div class="section-title">
+          ⚡ Quick Actions
+        </div>
+        <div class="action-grid" id="actionGrid">
+          <button class="action-btn primary" id="autofillBtn">
+            <div class="btn-icon">✎</div>
+            Auto-fill
+          </button>
+          
+          <button class="action-btn" id="analyzeBtn">
+            <div class="btn-icon">📊</div>
+            Analyze Match
+          </button>
+          
+          <button class="action-btn" id="saveJobBtn">
+            <div class="btn-icon">💾</div>
+            Save Job
+          </button>
+          
+          <button class="action-btn" id="coverLetterBtn">
+            <div class="btn-icon">📝</div>
+            Cover Letter
+          </button>
+        </div>
+
+        <div class="quick-actions">
+          <button class="quick-btn" id="resumeBtn">📄 Resume</button>
+          <button class="quick-btn" id="profileBtn">👤 Profile</button>
+          <button class="quick-btn" id="historyBtn">📈 History</button>
+        </div>
+      </div>
+
+      <!-- Tasks Section -->
+      <div class="tasks-section" id="tasksSection">
+        <div class="section-title">
+          ✅ My Tasks
+          <span class="tasks-count" id="tasksCount">0</span>
+        </div>
+        <div class="tasks-list" id="tasksList">
+          <!-- Tasks will be loaded here -->
+        </div>
+        <button class="add-task-btn" id="addTaskBtn">+ Add Task</button>
+      </div>
+
+      <div class="score-section" id="scoreSection" style="display: none;">
+        <div class="score-header">
+          <span class="score-title">Job Match Score</span>
+          <span class="score-value" id="matchScore">--</span>
+        </div>
+        <div class="score-progress">
+          <div class="score-fill" id="scoreFill" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="section-title">
+          ⚙️ Settings
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Auto-fill enabled</span>
+          <div class="toggle active" id="autofillToggle">
+            <div class="toggle-handle"></div>
+          </div>
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Job tracking</span>
+          <div class="toggle active" id="trackingToggle">
+            <div class="toggle-handle"></div>
+          </div>
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Smart notifications</span>
+          <div class="toggle active" id="notificationsToggle">
+            <div class="toggle-handle"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <div>Processing your request...</div>
+    </div>
+
+    <div class="footer">
+      <a href="#" id="openDashboard">🚀 Open Dashboard</a>
+    </div>
+  </div>
+
+  <!-- Task Creation Modal -->
+  <div class="modal-overlay" id="taskModal">
+    <div class="task-modal">
+      <div class="modal-header">
+        <h3 class="modal-title">✨ Create New Task</h3>
+        <button class="modal-close" id="closeTaskModal">×</button>
+      </div>
+      
+      <form id="taskForm">
+        <div class="form-group">
+          <label class="form-label">Quick Templates</label>
+          <div class="template-options">
+            <button type="button" class="template-btn" data-template="follow_up">📞 Follow Up</button>
+            <button type="button" class="template-btn" data-template="interview_prep">📝 Interview Prep</button>
+            <button type="button" class="template-btn" data-template="thank_you">💌 Thank You Note</button>
+            <button type="button" class="template-btn" data-template="research">🔍 Company Research</button>
+            <button type="button" class="template-btn" data-template="custom">✨ Custom Task</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="taskTitle">Task Title *</label>
+          <input type="text" id="taskTitle" class="form-input" placeholder="Enter task title..." maxlength="100" required>
+          <div class="form-error" id="titleError">Please enter a task title</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="taskDescription">Description</label>
+          <textarea id="taskDescription" class="form-textarea" placeholder="Add details about this task..." maxlength="500"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Priority</label>
+          <div class="priority-options">
+            <button type="button" class="priority-btn high" data-priority="high">🔴 High</button>
+            <button type="button" class="priority-btn medium selected" data-priority="medium">🟡 Medium</button>
+            <button type="button" class="priority-btn low" data-priority="low">🟢 Low</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="taskCategory">Category</label>
+          <select id="taskCategory" class="form-select">
+            <option value="job_search">🎯 Job Search</option>
+            <option value="follow_up">📞 Follow Up</option>
+            <option value="interview">🤝 Interview</option>
+            <option value="application">📝 Application</option>
+            <option value="networking">👥 Networking</option>
+            <option value="research">🔍 Research</option>
+            <option value="general" selected>📋 General</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="taskDueDate">Due Date (Optional)</label>
+          <input type="datetime-local" id="taskDueDate" class="form-input">
+        </div>
+      </form>
+
+      <div class="modal-actions">
+        <button type="button" class="modal-btn cancel" id="cancelTaskModal">Cancel</button>
+        <button type="button" class="modal-btn primary" id="submitTask">Create Task</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
